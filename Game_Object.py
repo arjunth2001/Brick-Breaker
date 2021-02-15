@@ -3,7 +3,7 @@ from config import SCREEN_HEIGHT, SCREEN_WIDTH
 
 class Game_object:
 
-    ''' The generalisation of a Game Object'''
+    ''' The generalisation of a Game Object. Base class for all objects in the game'''
 
     def __init__(self, x, y, xlength, ylength, xv, yv, __array, __color):
         self.x = x
@@ -14,12 +14,28 @@ class Game_object:
         self.__color = __color
         self.xlength = xlength
         self.ylength = ylength
+        self.active = True
 
     def get_array(self):
         return self.__array
 
+    def set_inactive(self):
+        self.active = False
+
+    def is_active(self):
+        return self.active
+
     def get_color(self):
         return self.__color
+
+    def set_x(self, x):
+        self.x = x
+
+    def set_y(self, y):
+        self.y = y
+
+    def set_color(self, color):
+        self.__color[::, ::] = color
 
     def set_xv(self, xv):
         self.xv = xv
@@ -52,21 +68,6 @@ class Game_object:
     def get_y(self):
         return self.y
 
-    def move(self):
-        back_x = self.x
-        back_y = self.y
-        try:
-            self.x += self.xv//abs(self.xv)
-            self.y += self.yv//abs(self.yv)
-            flag = False
-            if(self.x < 0 or self.x >= SCREEN_WIDTH):
-                self.x = back_x
-                self.xv *= -1
-                flag = True
-            if(self.y < 0 or self.y >= SCREEN_HEIGHT):
-                self.y = back_y
-                self.yv *= -1
-                flag = True
-            return flag
-        except:
-            return False
+    def move(self, x=-0.5, y=-0.5):
+        self.x = self.x+self.xv if x == -0.5 else x
+        self.y = self.y+self.yv if y == -0.5 else y

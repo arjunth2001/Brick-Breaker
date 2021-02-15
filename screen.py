@@ -25,7 +25,7 @@ class Game_Screen:
         print('\033[0;0H')
         for i in range(SCREEN_HEIGHT):
             for j in range(SCREEN_WIDTH):
-                print(self.__array[i][j], end="")
+                print(self.__color[i][j]+self.__array[i][j], end="")
             print()
 
     def reset_screen(self):
