@@ -6,7 +6,7 @@ from config import SCREEN_HEIGHT, SCREEN_WIDTH
 
 class Unbreakable(Brick):
     def __init__(self, x, y):
-        super().__init__(x, y, 0)
+        super().__init__(x, y, -1)
 
     def hit(self):
-        return 0
+        return -1

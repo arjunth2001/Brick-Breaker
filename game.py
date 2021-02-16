@@ -7,6 +7,7 @@ from unbreakable import Unbreakable
 from brick import Brick
 from paddle import Paddle
 from powerup import Power_up
+from config import TIME_PADDLE_POWER_UP, TIME_PASS_THROUGH, TIME_FAST_BALL, TIME_GRAB, LIVES
 import os
 import time
 
@@ -18,29 +19,78 @@ class Game:
     move_all : Moves all objects\n
     '''
     getch = Get()
-    power_up_type = [np.array([["E", "E"], ["E", "E"]]),
-                     np.array([["S", "S"], ["S", "S"]]),
-                     np.array([["G", "G"], ["G", "G"]]),
-                     np.array([["X", "X"], ["X", "X"]]),
-                     np.array([[">", ">"], [">", ">"]])]
+    power_up_type = [
+        np.array([["P", "P"], ["P", "P"]]),
+        np.array([["E", "E"], ["E", "E"]]),
+        np.array([["S", "S"], ["S", "S"]]),
+        np.array([["G", "G"], ["G", "G"]]),
+        np.array([["X", "X"], ["X", "X"]]),
+        np.array([[">", ">"], [">", ">"]])]
 
     def print_meta(self):
-        print(f"Lives Left:%d  Score:%d  Time Spend:%d" %
-              (self.lives, self.score, self.time_elapsed()))
+        print_string = f"\33[2K Lives Left:%d  Score:%d  Time Spend:%d" % (
+            self.lives, self.score, self.time_elapsed())
+        if(self.pass_through):
+            print_string += f" P left: %d" % (TIME_PASS_THROUGH -
+                                              self.get_change_in_secs(self.pass_through))
+        if(self.paddle.get_powerup_time()):
+            print_string += f" S left: %d" % (TIME_PADDLE_POWER_UP -
+                                              self.get_change_in_secs(self.paddle.get_powerup_time()))
+        if(self.fast_ball):
+            print_string += f" F left: %d" % (TIME_FAST_BALL -
+                                              self.get_change_in_secs(self.fast_ball))
+        if(self.grab_ball):
+            print_string += f" G left: %d" % (TIME_GRAB -
+                                              self.get_change_in_secs(self.grab_ball))
+        print(print_string)
+
+    def get_change_in_secs(self, value):
+        time_delta = datetime.now()-value
+        total_seconds = time_delta.total_seconds()
+        return int(total_seconds)
+
+    def check_powerup_times(self):
+        if(self.paddle.get_powerup_time()):
+            if(self.get_change_in_secs(self.paddle.get_powerup_time()) > TIME_PADDLE_POWER_UP):
+                self.paddle.times_up()
+        if(self.pass_through):
+            if(self.get_change_in_secs(self.pass_through) > TIME_PASS_THROUGH):
+                self.pass_through = 0
+        if(self.fast_ball):
+            if(self.get_change_in_secs(self.fast_ball) > TIME_FAST_BALL):
+                self.fast_ball = 0
+                for ball in self.balls:
+                    new_xv = 0
+                    new_yv = 0
+                    if(ball.get_xv()):
+                        new_xy = ball.get_xv()-2*abs(ball.get_xv())//ball.get_xv()
+                    if(ball.get_yv()):
+                        new_yv = ball.get_yv()-2*abs(ball.get_yv())//ball.get_yv()
+                    ball.set_xv(new_xv)
+                    ball.set_yv(new_yv)
+        if(self.grab_ball):
+            if(self.get_change_in_secs(self.grab_ball) > TIME_GRAB):
+                self.grab_ball = 0
+                self.paddle.set_grab()
 
     def reset(self):
+        self.start_time = datetime.now()
+        self.pass_through = 0
+        self.fast_ball = 0
+        self.grab_ball = 0
+        self.score = 0
         self.win = False
         self.pause_time = 0
-        self.lives = 3
+        self.lives = LIVES
         self.balls = []
-        self.paddle = Paddle(65, 29, 8, 0)
+        self.paddle = Paddle(65, 29, 17, 0)
         self.bricks = []
-        self.put_bricks()
         self.powerups = []
         self.balls.append(Ball(69, 28, -1, -1))
         self.screen.reset_screen()
         self.update_screen()
         self.screen.print_game_screen()
+        self.check_powerup_times()
         self.print_meta()
 
     def put_bricks(self):
@@ -110,27 +160,51 @@ class Game:
         minutes = round(total_seconds)//60
         return minutes-self.pause_time
 
+    def small_reset(self):
+        self.pass_through = 0
+        self.grab_ball = 0
+        self.fast_ball = 0
+        self.balls = []
+        self.paddle = Paddle(65, 29, 17, 0)
+        self.powerups = []
+        self.balls.append(Ball(69, 28, -1, -1))
+        self.screen.reset_screen()
+        self.update_screen()
+        self.screen.print_game_screen()
+        self.check_powerup_times()
+        self.print_meta()
+
     def __init__(self, screen):
         self.start_time = datetime.now()
+        self.pass_through = 0
+        self.grab_ball = 0
+        self.fast_ball = 0
         self.score = 0
-        self.lives = 3
+        self.lives = LIVES
         self.win = False
         self.pause_time = 0
         self.balls = []
-        self.paddle = Paddle(65, 29, 8, 0)
+        self.paddle = Paddle(65, 29, 17, 0)
         self.bricks = []
         self.powerups = []
         self.balls.append(Ball(69, 28, -1, -1))
         self.screen = screen
         self.screen.print_game_screen()
+        self.check_powerup_times()
         self.print_meta()
 
     def user_input(self):
         c = input_to(self.getch)
         if(c == "a"):
             self.paddle.move(self.paddle.get_x()-self.paddle.get_xv())
+            for ball in self.balls:
+                if not ball.should_move():
+                    ball.move(ball.get_x()-self.paddle.get_xv(), ball.get_y())
         if(c == "s"):
             self.paddle.move(self.paddle.get_x()+self.paddle.get_xv())
+            for ball in self.balls:
+                if not ball.should_move():
+                    ball.move(ball.get_x()+self.paddle.get_xv(), ball.get_y())
         if(c == "r"):
             for ball in self.balls:
                 if not ball.should_move():
@@ -142,13 +216,18 @@ class Game:
 
     def move_all(self):
         for powerup in self.powerups:
-            powerup.move()
+            if(powerup.is_active()):
+                powerup.move()
         for powerup in self.powerups:
-            col = powerup.did_collide(self.paddle)
-            if(col[0]):
-                self.execute_powerup(col[1])
+            if(powerup.is_active()):
+                col = powerup.did_collide(self.paddle)
+                if(col[0]):
+                    self.execute_powerup(col[1])
+                    powerup.set_inactive()
 
     def execute_powerup(self, type):
+        if np.array_equal(np.array([["P", "P"], ["P", "P"]]), type):
+            self.pass_through = datetime.now()
         if np.array_equal(np.array([["E", "E"], ["E", "E"]]), type):
             self.paddle.make_enlarged()
         if np.array_equal(np.array([["S", "S"], ["S", "S"]]), type):
@@ -158,44 +237,62 @@ class Game:
             for ball in self.balls:
                 new_ball = Ball(ball.x, ball.y, np.random.choice(
                     [1, -1]), np.random.choice([1, -1]))
+                new_ball.flip_move()
                 new_balls.append(new_ball)
             self.balls.extend(new_balls)
         if np.array_equal(np.array([[">", ">"], [">", ">"]]), type):
+            self.fast_ball = datetime.now()
             for ball in self.balls:
-                ball.setxv(ball.get_xv()*2)
-                ball.setyv(ball.get_yv()*2)
+                new_xv = 0
+                new_yv = 0
+                if(ball.get_xv()):
+                    new_xy = ball.get_xv()+2*abs(ball.get_xv())//ball.get_xv()
+                if(ball.get_yv()):
+                    new_yv = ball.get_yv()+2*abs(ball.get_yv())//ball.get_yv()
+                ball.set_xv(new_xv)
+                ball.set_yv(new_yv)
         if np.array_equal(np.array([["G", "G"], ["G", "G"]]), type):
             self.paddle.set_grab()
+            self.grab_ball = datetime.now()
 
     def collissions(self):
         for ball in self.balls:
             if ball.is_active() and ball.should_move():
+
                 points = ball.trajectory()
                 for p in points:
-                    ball.move(p[0], p[1])
+                    flag = False
+                    flag = ball.move(p[0], p[1])
                     a = self.paddle.did_collide(ball)
                     if a != 0:
                         ball.set_xv(ball.get_xv()+a)
                         ball.set_yv(ball.get_yv()*-1)
+                        flag = True
                         if self.paddle.get_grab():
                             ball.flip_move()
                         break
 
                     for brick in self.bricks:
-                        if brick.is_active() and brick.did_collide(ball):
+                        if self.pass_through and brick.is_active() and brick.did_collide(ball):
+                            brick.set_inactive()
+                            self.score += 5
+                            flag = True
+                        elif brick.is_active() and brick.did_collide(ball):
+                            flag = True
                             if isinstance(brick, chain_brick):
                                 curr = brick.hit(self.bricks)
                                 if(curr == 0):
                                     self.powerups.append(
-                                        Power_up(brick.get_x(), brick.get_y(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4])]))
+                                        Power_up(brick.get_x(), brick.get_y(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5])]))
                             else:
                                 curr = brick.hit()
                                 if(curr == 0):
                                     self.powerups.append(
-                                        Power_up(brick.get_x(), brick.get_y(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4])]))
+                                        Power_up(brick.get_x(), brick.get_y(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5])]))
                             if not isinstance(brick, Unbreakable):
                                 self.score += 1
-                            break
+                    if(flag):
+                        break
 
     def update_screen(self):
         self.screen.add_to_game_screen(self.paddle)
@@ -210,6 +307,7 @@ class Game:
                 self.screen.add_to_game_screen(ball)
 
     def lost(self):
+        self.reset()
         os.system("clear")
         while True:
             print('\033[0;0H')
@@ -219,9 +317,10 @@ class Game:
             if(c == 'c'):
                 break
 
-    def win(self):
+    def winpage(self):
         os.system("clear")
         self.win = False
+        self.reset()
         while True:
             print('\033[0;0H')
             print(
@@ -236,6 +335,7 @@ class Game:
             if(c == "q"):
                 quit()
             self.main_screen()
+            self.reset()
             os.system("clear")
             self.put_bricks()
             while self.lives > 0:
@@ -244,25 +344,27 @@ class Game:
                 self.screen.reset_screen()
                 self.update_screen()
                 self.screen.print_game_screen()
+                self.check_powerup_times()
                 self.print_meta()
                 self.collissions()
                 self.screen.reset_screen()
                 self.update_screen()
                 self.screen.print_game_screen()
+                self.check_powerup_times()
                 self.print_meta()
                 for ball in self.balls:
                     if ball.is_active():
                         break
                 else:
                     self.lives -= 1
-                    self.reset()
+                    self.small_reset()
                 for brick in self.bricks:
                     if not isinstance(brick, Unbreakable):
                         if brick.is_active():
                             break
                 else:
                     self.win = True
-            if self.lives == 0 and not self.win:
+            if self.win:
+                self.winpage()
+            elif self.lives == 0:
                 self.lost()
-            else:
-                self.win()

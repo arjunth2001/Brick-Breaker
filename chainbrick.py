@@ -5,16 +5,23 @@ from config import SCREEN_HEIGHT, SCREEN_WIDTH
 
 
 class chain_brick(Brick):
+    '''The chain brick BONUS - Inherits from Brick Class'''
+
     def __init__(self, x, y, strength):
         super().__init__(x, y, strength)
-        self.array = np.array([[":", "-", "-", "-", "-", "-", "-", ":"],
-                               ["|", ">", ">", ">", ">", ">", ">", "|"],
-                               [":", "-", "-", "-", "-", "-", "-", ":"]])
+        self.array = np.array([
+            ["|", ">", ">", ">", ">", ">", ">", "|"],
+        ])
 
     def get_array(self):
+        '''get's body of chain_brick
+        Polymorphism: Overrides Game_Object get_array'''
         return self.array
 
     def hit(self, bricks):
+        '''hits the brick and reduces its strengh
+        Initiates chain reaction over other bricks
+        Polymorphism: Function overloading over Brick hit'''
         curr_strength = super().hit()
         if curr_strength == 0:
             for brick in bricks:

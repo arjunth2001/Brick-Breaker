@@ -69,5 +69,6 @@ class Game_object:
         return self.y
 
     def move(self, x=-0.5, y=-0.5):
+        '''moves the game object'''
         self.x = self.x+self.xv if x == -0.5 else x
         self.y = self.y+self.yv if y == -0.5 else y
