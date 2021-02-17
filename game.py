@@ -145,6 +145,7 @@ class Game:
 
             c = input_to(self.getch)
             if(c == "q"):
+                os.system("clear")
                 quit()
             if(c == 'x'):
                 break
