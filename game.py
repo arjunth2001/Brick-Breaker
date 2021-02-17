@@ -200,7 +200,7 @@ class Game:
             for ball in self.balls:
                 if not ball.should_move():
                     ball.move(ball.get_x()-self.paddle.get_xv(), ball.get_y())
-        if(c == "s"):
+        if(c == "d"):
             self.paddle.move(self.paddle.get_x()+self.paddle.get_xv())
             for ball in self.balls:
                 if not ball.should_move():
