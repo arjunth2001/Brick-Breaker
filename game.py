@@ -309,7 +309,7 @@ class Game:
                         break
 
                     for brick in self.bricks:
-                        if self.pass_through and brick.is_active() and brick.did_collide(ball):
+                        if self.pass_through and brick.is_active() and brick.pass_through_collide(ball):
                             brick.set_inactive()
                             self.score += 5
                             flag = True

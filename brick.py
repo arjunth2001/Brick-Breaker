@@ -26,6 +26,9 @@ class Brick(Game_object):
             self.set_inactive()
         return self.strength
 
+    def pass_through_collide(self, obj):
+        return super().did_collide(obj)
+
     def did_collide(self, obj):
         '''checks collission with ball- also changes the velocity of ball
         polymorphism- Overrides Game_Object did_collide with extra functionality'''
