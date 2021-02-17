@@ -99,7 +99,7 @@ class Game:
         self.pause_time = 0
         self.lives = LIVES
         self.balls = []
-        self.paddle = Paddle(65, 29, 17, 0)
+        self.paddle = Paddle(65, 29, 8, 0)
         self.bricks = []
         self.powerups = []
         self.balls.append(Ball(69, 28, -1, -1))
@@ -199,7 +199,7 @@ class Game:
         self.grab_ball = 0
         self.fast_ball = 0
         self.balls = []
-        self.paddle = Paddle(65, 29, 17, 0)
+        self.paddle = Paddle(65, 29, 8, 0)
         self.powerups = []
         self.balls.append(Ball(69, 28, -1, -1))
         self.screen.reset_screen()
@@ -218,7 +218,7 @@ class Game:
         self.win = False
         self.pause_time = 0
         self.balls = []
-        self.paddle = Paddle(65, 29, 17, 0)
+        self.paddle = Paddle(65, 29, 8, 0)
         self.bricks = []
         self.powerups = []
         self.balls.append(Ball(69, 28, -1, -1))
@@ -228,7 +228,7 @@ class Game:
         self.print_meta()
 
     def user_input(self):
-        c = input_to(self.getch)
+        c = input_to(self.getch, 0.1)
         if(c == "a"):
             self.paddle.move(self.paddle.get_x()-self.paddle.get_xv())
             for ball in self.balls:
@@ -387,11 +387,6 @@ class Game:
             while self.lives > 0:
                 self.user_input()
                 self.move_all()
-                self.screen.reset_screen()
-                self.update_screen()
-                self.screen.print_game_screen()
-                self.check_powerup_times()
-                self.print_meta()
                 self.collissions()
                 self.screen.reset_screen()
                 self.update_screen()
