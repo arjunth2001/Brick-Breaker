@@ -223,8 +223,6 @@ class Game:
         self.bricks = []
         self.powerups = []
         self.balls.append(Ball(69, 28, -1, -1))
-        self.powerups.append(
-            Power_up(70, 20, self.power_up_type[0]))
         self.screen = screen
         self.screen.print_game_screen()
         self.check_powerup_times()
