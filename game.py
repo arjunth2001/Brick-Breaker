@@ -223,6 +223,8 @@ class Game:
         self.bricks = []
         self.powerups = []
         self.balls.append(Ball(69, 28, -1, -1))
+        self.powerups.append(
+            Power_up(70, 20, self.power_up_type[0]))
         self.screen = screen
         self.screen.print_game_screen()
         self.check_powerup_times()
@@ -309,7 +311,7 @@ class Game:
                         break
 
                     for brick in self.bricks:
-                        if self.pass_through and brick.is_active() and brick.did_collide(ball):
+                        if self.pass_through and brick.is_active() and brick.pass_through_collide(ball):
                             brick.set_inactive()
                             self.score += 5
                             flag = True
