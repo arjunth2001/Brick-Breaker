@@ -31,7 +31,8 @@ class Brick(Game_object):
         polymorphism- Overrides Game_Object did_collide with extra functionality'''
         collided = super().did_collide(obj)
         if collided:
-            obj.yv *= -1
+            if obj.x < self.x + self.xlength and obj.x >= self.x:
+                obj.yv *= -1
             if obj.x < self.x+2:
                 obj.xv -= 3
                 return collided
