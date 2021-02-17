@@ -2,12 +2,15 @@ from input import Get, input_to
 from datetime import datetime
 from ball import Ball
 from chainbrick import chain_brick
+from Game_Object import Game_object
 import numpy as np
 from unbreakable import Unbreakable
 from brick import Brick
 from paddle import Paddle
 from powerup import Power_up
 from config import TIME_PADDLE_POWER_UP, TIME_PASS_THROUGH, TIME_FAST_BALL, TIME_GRAB, LIVES
+from header import arjun, brickbreaker, presstoplay, gameover, on_continue, on_won
+from colorama import Fore, Back, Style
 import os
 import time
 
@@ -18,6 +21,18 @@ class Game:
     user_input: Takes user input\n
     move_all : Moves all objects\n
     '''
+    my_arjun = Game_object(35, 5, 75, 6, 0, 0, arjun, np.full(
+        (6, 75), Fore.RED+Back.BLACK+Style.BRIGHT))
+    my_brickbreaker = Game_object(10, 13, 123, 6, 0, 0, brickbreaker, np.full(
+        (6, 123), Fore.WHITE+Back.CYAN+Style.BRIGHT))
+    my_press = Game_object(50, 28, 49, 1, 0, 0, presstoplay, np.full(
+        (1, 49), Fore.WHITE+Style.BRIGHT))
+    game_over = Game_object(20, 3, 106, 7, 0, 0, gameover, np.full(
+        (7, 106), Fore.RED+Style.BRIGHT))
+    my_continue = Game_object(65, 28, 19, 1, 0, 0, on_continue, np.full(
+        (1, 19), Fore.WHITE+Style.BRIGHT))
+    my_win = Game_object(45, 3, 58, 6, 0, 0, on_won, np.full(
+        on_won.shape, Fore.WHITE+Style.BRIGHT))
     getch = Get()
     power_up_type = [
         np.array([["P", "P"], ["P", "P"]]),
@@ -43,6 +58,7 @@ class Game:
             print_string += f" G left: %d" % (TIME_GRAB -
                                               self.get_change_in_secs(self.grab_ball))
         print(print_string)
+        print('a- LEFT. d - right. r - release ball. PRESS p to pause. q to quit.')
 
     def get_change_in_secs(self, value):
         time_delta = datetime.now()-value
@@ -115,10 +131,18 @@ class Game:
 
     def main_screen(self):
         os.system("clear")
+        self.screen.reset_screen()
+        self.screen.add_to_game_screen(self.my_arjun)
+        self.screen.add_to_game_screen(self.my_brickbreaker)
+        self.screen.add_to_game_screen(self.my_press)
+        self.screen.print_game_screen()
         while True:
-            print('\033[0;0H')
-            print(
-                "This will be main screen. Press x to play. Press i for instructions.q to quit")
+            self.screen.reset_screen()
+            self.screen.add_to_game_screen(self.my_arjun)
+            self.screen.add_to_game_screen(self.my_brickbreaker)
+            self.screen.add_to_game_screen(self.my_press)
+            self.screen.print_game_screen()
+
             c = input_to(self.getch)
             if(c == "q"):
                 quit()
@@ -131,23 +155,33 @@ class Game:
 
     def instructions(self):
         os.system("clear")
+        text_string = f"Read README and PDFs for rules and instructions."
+        body = np.array([list(text_string)])
+        obj = Game_object(50, 20, body[0].size,
+                          1, 0, 0, body, np.full(body.shape, Fore.WHITE+Style.BRIGHT))
+        self.screen.reset_screen()
+        self.screen.add_to_game_screen(obj)
+        self.screen.add_to_game_screen(self.my_continue)
+        self.screen.print_game_screen()
         while True:
-            print('\033[0;0H')
-            print(
-                "This will be instructions screen. Press b to go back.")
             c = input_to(self.getch)
-            if(c == 'b'):
+            if(c == 'c'):
                 break
 
     def pause_screen(self):
         os.system("clear")
+        text_string = f"The game is paused."
+        body = np.array([list(text_string)])
+        obj = Game_object(65, 20, body[0].size,
+                          1, 0, 0, body, np.full(body.shape, Fore.WHITE+Style.BRIGHT))
+        self.screen.reset_screen()
+        self.screen.add_to_game_screen(obj)
+        self.screen.add_to_game_screen(self.my_continue)
+        self.screen.print_game_screen()
         start_time = datetime.now()
         while True:
-            print('\033[0;0H')
-            print(
-                "This will be pause screen. Press b to go back.")
             c = input_to(self.getch)
-            if(c == 'b'):
+            if(c == 'c'):
                 end_time = datetime.now()
                 time_delta = end_time-start_time
                 total_seconds = time_delta.total_seconds()
@@ -212,6 +246,7 @@ class Game:
         if(c == "p"):
             self.pause_screen()
         if(c == "q"):
+            os.system("clear")
             quit()
 
     def move_all(self):
@@ -307,12 +342,19 @@ class Game:
                 self.screen.add_to_game_screen(ball)
 
     def lost(self):
+        score_string = f"SCORE: %d" % (self.score)
+        body = np.array([list(score_string)])
+        obj = Game_object(70, 20, body[0].size,
+                          1, 0, 0, body, np.full(body.shape, Fore.WHITE+Style.BRIGHT))
         self.reset()
         os.system("clear")
+        self.screen.reset_screen()
+        self.screen.add_to_game_screen(self.game_over)
+        self.screen.add_to_game_screen(obj)
+        self.screen.add_to_game_screen(self.my_continue)
+        self.screen.print_game_screen()
+
         while True:
-            print('\033[0;0H')
-            print(
-                "You Lost. Press c to continue.")
             c = input_to(self.getch)
             if(c == 'c'):
                 break
@@ -320,20 +362,24 @@ class Game:
     def winpage(self):
         os.system("clear")
         self.win = False
+        score_string = f"SCORE: %d" % (self.score)
+        body = np.array([list(score_string)])
+        obj = Game_object(70, 20, body[0].size,
+                          1, 0, 0, body, np.full(body.shape, Fore.WHITE+Style.BRIGHT))
         self.reset()
+        os.system("clear")
+        self.screen.reset_screen()
+        self.screen.add_to_game_screen(self.my_win)
+        self.screen.add_to_game_screen(obj)
+        self.screen.add_to_game_screen(self.my_continue)
+        self.screen.print_game_screen()
         while True:
-            print('\033[0;0H')
-            print(
-                "You Won. Press c to continue.")
             c = input_to(self.getch)
             if(c == 'c'):
                 break
 
     def new_game(self):
         while True:
-            c = input_to(self.getch)
-            if(c == "q"):
-                quit()
             self.main_screen()
             self.reset()
             os.system("clear")
