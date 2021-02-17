@@ -27,4 +27,7 @@ class chain_brick(Brick):
             for brick in bricks:
                 if(isinstance(brick, chain_brick) and (brick.x == self.x or brick.y == self.y)):
                     brick.set_inactive()
+                    for other_brick in bricks:
+                        if(isinstance(other_brick, chain_brick) and (other_brick.x == brick.x or other_brick.y == brick.y)):
+                            other_brick.set_inactive()
         return curr_strength

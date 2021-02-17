@@ -97,12 +97,12 @@ class Game:
         brick_pos = [2, 10, 18, 26, 34, 42, 50, 58, 66,
                      74, 82,   90, 98, 106, 114, 122, 130, 138]
         self.bricks.clear()
-        for y in range(3, 15, 3):
+        for y in range(3, 10, 1):
             for x in brick_pos:
-                if ((y == 3 or y == 12) and x == 74):
+                if ((y == 6 or y == 9) and x == 74):
                     self.bricks.append(chain_brick(
                         x, y, np.random.choice([1, 2, 3, 4, 5])))
-                elif ((y == 6 or y == 9) and (x >= 58 and x <= 82)):
+                elif ((y == 7 or y == 8) and (x >= 58 and x <= 82)):
                     self.bricks.append(chain_brick(
                         x, y, np.random.choice([1, 2, 3, 4, 5])))
                 else:
