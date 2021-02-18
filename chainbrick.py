@@ -25,9 +25,8 @@ class chain_brick(Brick):
         curr_strength = super().hit()
         if curr_strength == 0:
             for brick in bricks:
-                if(isinstance(brick, chain_brick) and (brick.x == self.x or brick.y == self.y)):
-                    brick.set_inactive()
+                if isinstance(brick, chain_brick):
                     for other_brick in bricks:
-                        if(isinstance(other_brick, chain_brick) and (other_brick.x == brick.x or other_brick.y == brick.y)):
+                        if (other_brick.x == brick.x or other_brick.x == brick.x-brick.xlength or other_brick.x == brick.x-brick.xlength) and (other_brick.y == brick.y or other_brick.y == brick.y-1 or other_brick.y == brick.y+1):
                             other_brick.set_inactive()
         return curr_strength
