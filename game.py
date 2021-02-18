@@ -406,6 +406,7 @@ class Game:
                             break
                 else:
                     self.win = True
+                    break
             if self.win:
                 self.winpage()
             elif self.lives == 0:
