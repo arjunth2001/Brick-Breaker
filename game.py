@@ -307,6 +307,7 @@ class Game:
     def move_all(self):
         for powerup in self.powerups:
             if(powerup.is_active()):
+                powerup.set_yv(powerup.get_yv()+1)
                 points = powerup.trajectory()
                 for p in points:
                     flag = False
