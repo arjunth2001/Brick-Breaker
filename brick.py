@@ -49,3 +49,10 @@ class Brick(Game_object):
                 obj.xv += 3
                 return collided
         return collided
+
+    def move(self):
+        self.y += 1
+        if self.y+1 == 29:
+            return True
+        else:
+            return False

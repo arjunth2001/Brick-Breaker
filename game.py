@@ -8,7 +8,7 @@ from unbreakable import Unbreakable
 from brick import Brick
 from paddle import Paddle
 from powerup import Power_up
-from config import TIME_PADDLE_POWER_UP, TIME_PASS_THROUGH, TIME_FAST_BALL, TIME_GRAB, LIVES
+from config import TIME_PADDLE_POWER_UP, TIME_PASS_THROUGH, TIME_FAST_BALL, TIME_GRAB, LIVES, MOVE_BRICK
 from header import arjun, brickbreaker, presstoplay, gameover, on_continue, on_won
 from colorama import Fore, Back, Style
 import os
@@ -41,10 +41,14 @@ class Game:
         np.array([["G", "G"], ["G", "G"]]),
         np.array([["X", "X"], ["X", "X"]]),
         np.array([[">", ">"], [">", ">"]])]
+    level = 1
+    skip_level = True
+    level_start = datetime.now()
+    over = False
 
     def print_meta(self):
-        print_string = f"\33[2K Lives Left:%d  Score:%d  Time Spend:%d" % (
-            self.lives, self.score, self.time_elapsed())
+        print_string = f"\33[2K Level:%d Lives Left:%d  Score:%d  Time Spend:%d" % (
+            self.level, self.lives, self.score, self.time_elapsed())
         if(self.pass_through):
             print_string += f" P left: %d" % (TIME_PASS_THROUGH -
                                               self.get_change_in_secs(self.pass_through))
@@ -91,6 +95,7 @@ class Game:
 
     def reset(self):
         self.start_time = datetime.now()
+        self.level_start = datetime.now()
         self.pass_through = 0
         self.fast_ball = 0
         self.grab_ball = 0
@@ -110,24 +115,65 @@ class Game:
         self.print_meta()
 
     def put_bricks(self):
-        brick_pos = [2, 10, 18, 26, 34, 42, 50, 58, 66,
-                     74, 82,   90, 98, 106, 114, 122, 130, 138]
-        self.bricks.clear()
-        for y in range(3, 10, 1):
-            for x in brick_pos:
-                if ((y == 6 or y == 9) and x == 74):
-                    self.bricks.append(chain_brick(
-                        x, y, np.random.choice([1, 2, 3, 4, 5])))
-                elif ((y == 7 or y == 8) and (x >= 58 and x <= 82)):
-                    self.bricks.append(chain_brick(
-                        x, y, np.random.choice([1, 2, 3, 4, 5])))
-                else:
-                    p = np.random.uniform(0, 1)
-                    if(p <= 1/4):
-                        self.bricks.append(Unbreakable(x, y))
+        if self.level == 1:
+            brick_pos = [50, 58, 66,
+                         74, 82,   90]
+            self.bricks.clear()
+            for y in range(3, 10, 1):
+                for x in brick_pos:
+                    if ((y == 6 or y == 9) and x == 74):
+                        self.bricks.append(chain_brick(
+                            x, y, np.random.choice([1, 2, 3, 4, 5])))
+                    elif ((y == 7 or y == 8) and (x >= 58 and x <= 82)):
+                        self.bricks.append(chain_brick(
+                            x, y, np.random.choice([1, 2, 3, 4, 5])))
                     else:
-                        self.bricks.append(
-                            Brick(x, y, np.random.choice([1, 2, 3, 4, 5])))
+                        p = np.random.uniform(0, 1)
+                        if(p <= 1/4):
+                            self.bricks.append(Unbreakable(x, y))
+                        else:
+                            self.bricks.append(
+                                Brick(x, y, np.random.choice([1, 2, 3, 4, 5])))
+
+        if self.level == 2:
+            brick_pos = [26, 34, 42, 50, 58, 66,
+                         74, 82,   90, 98, 106, 114]
+            self.bricks.clear()
+            for y in range(3, 10, 1):
+                for x in brick_pos:
+                    if ((y == 6 or y == 9) and x == 74):
+                        self.bricks.append(chain_brick(
+                            x, y, np.random.choice([1, 2, 3, 4, 5])))
+                    elif ((y == 7 or y == 8) and (x >= 58 and x <= 82)):
+                        self.bricks.append(chain_brick(
+                            x, y, np.random.choice([1, 2, 3, 4, 5])))
+                    else:
+                        p = np.random.uniform(0, 1)
+                        if(p <= 1/4):
+                            self.bricks.append(Unbreakable(x, y))
+                        else:
+                            self.bricks.append(
+                                Brick(x, y, np.random.choice([1, 2, 3, 4, 5])))
+
+        if self.level == 3:
+            brick_pos = [2, 10, 18, 26, 34, 42, 50, 58, 66,
+                         74, 82,   90, 98, 106, 114, 122, 130, 138]
+            self.bricks.clear()
+            for y in range(3, 10, 1):
+                for x in brick_pos:
+                    if ((y == 6 or y == 9) and x == 74):
+                        self.bricks.append(chain_brick(
+                            x, y, np.random.choice([1, 2, 3, 4, 5])))
+                    elif ((y == 7 or y == 8) and (x >= 58 and x <= 82)):
+                        self.bricks.append(chain_brick(
+                            x, y, np.random.choice([1, 2, 3, 4, 5])))
+                    else:
+                        p = np.random.uniform(0, 1)
+                        if(p <= 1/4):
+                            self.bricks.append(Unbreakable(x, y))
+                        else:
+                            self.bricks.append(
+                                Brick(x, y, np.random.choice([1, 2, 3, 4, 5])))
 
     def main_screen(self):
         os.system("clear")
@@ -249,6 +295,8 @@ class Game:
         if(c == "q"):
             os.system("clear")
             quit()
+        if(c == "l"):
+            self.skip_level = True
 
     def move_all(self):
         for powerup in self.powerups:
@@ -260,6 +308,9 @@ class Game:
                 if(col[0]):
                     self.execute_powerup(col[1])
                     powerup.set_inactive()
+        if self.get_change_in_secs(self.level_start) >= MOVE_BRICK:
+            for brick in self.bricks:
+                self.over = brick.move()
 
     def execute_powerup(self, type):
         if np.array_equal(np.array([["P", "P"], ["P", "P"]]), type):
@@ -385,9 +436,12 @@ class Game:
             self.reset()
             os.system("clear")
             self.put_bricks()
-            while self.lives > 0:
+            while self.level <= 3 and self.lives > 0:
                 self.user_input()
                 self.move_all()
+                if self.over == True:
+                    break
+
                 self.collissions()
                 self.screen.reset_screen()
                 self.update_screen()
@@ -405,9 +459,23 @@ class Game:
                         if brick.is_active():
                             break
                 else:
-                    self.win = True
-                    break
+
+                    if self.level == 3:
+                        self.win = True
+                        break
+                    self.level += 1
+                    self.level_start = datetime.now()
+                    self.small_reset()
+                    self.put_bricks()
+
+                if self.skip_level == True:
+                    self.skip_level = False
+                    self.level += 1
+                    self.level_start = datetime.now()
+                    self.small_reset()
+                    self.put_bricks()
             if self.win:
                 self.winpage()
-            elif self.lives == 0:
+            elif self.lives == 0 or self.over:
+                self.over = False
                 self.lost()
