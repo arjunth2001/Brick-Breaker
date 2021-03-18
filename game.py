@@ -13,6 +13,8 @@ from config import TIME_PADDLE_POWER_UP, TIME_PASS_THROUGH, TIME_FAST_BALL, TIME
 from header import arjun, brickbreaker, presstoplay, gameover, on_continue, on_won
 from colorama import Fore, Back, Style
 from bullet import Bullet
+from ufo import UFO
+from bomb import Bomb
 import os
 import time
 
@@ -117,6 +119,9 @@ class Game:
         self.bricks = []
         self.powerups = []
         self.bullets = []
+        self.ufo = UFO(65, 1, 8, 0)
+        self.bombs = []
+        self.ufo_count = 0
         self.balls.append(Ball(69, 28, -1, -1))
         self.screen.reset_screen()
         self.update_screen()
@@ -125,27 +130,8 @@ class Game:
         self.print_meta()
 
     def put_bricks(self):
-        if self.level == 1:
-            brick_pos = [50, 58, 66,
-                         74, 82,   90]
-            self.bricks.clear()
-            for y in range(3, 10, 1):
-                for x in brick_pos:
-                    if ((y == 6 or y == 9) and x == 74):
-                        self.bricks.append(chain_brick(
-                            x, y, np.random.choice([1, 2, 3, 4, 5])))
-                    elif ((y == 7 or y == 8) and (x >= 58 and x <= 82)):
-                        self.bricks.append(chain_brick(
-                            x, y, np.random.choice([1, 2, 3, 4, 5])))
-                    else:
-                        p = np.random.uniform(0, 1)
-                        if(p <= 1/4):
-                            self.bricks.append(Unbreakable(x, y))
-                        else:
-                            self.bricks.append(
-                                Brick(x, y, np.random.choice([1, 2, 3, 4, 5])))
 
-        if self.level == 2:
+        if self.level == 1:
             brick_pos = [26, 34, 42, 50, 58, 66,
                          74, 82,   90, 98, 106, 114]
             self.bricks.clear()
@@ -170,7 +156,7 @@ class Game:
                                 self.bricks.append(
                                     Brick(x, y, np.random.choice([1, 2, 3, 4, 5])))
 
-        if self.level == 3:
+        if self.level == 2:
             brick_pos = [2, 10, 18, 26, 34, 42, 50, 58, 66,
                          74, 82,   90, 98, 106, 114, 122, 130, 138]
             self.bricks.clear()
@@ -189,6 +175,14 @@ class Game:
                         else:
                             self.bricks.append(
                                 Brick(x, y, np.random.choice([1, 2, 3, 4, 5])))
+        if self.level == 3:
+            brick_pos = [2, 10, 18, 26, 34, 42, 50, 58, 66,
+                         74, 82,   90, 98, 106, 114, 122, 130, 138]
+            self.bricks.clear()
+            for y in range(4, 10, 2):
+                for x in brick_pos:
+                    if(p <= 1/10):
+                        self.bricks.append(Unbreakable(x, y))
 
     def main_screen(self):
         os.system("clear")
@@ -264,6 +258,8 @@ class Game:
         self.paddle = Paddle(65, 29, 8, 0)
         self.powerups = []
         self.bullets = []
+        self.ufo = UFO(65, 1, 8, 0)
+        self.bombs = []
         self.balls.append(Ball(69, 28, -1, -1))
         self.screen.reset_screen()
         self.update_screen()
@@ -281,6 +277,10 @@ class Game:
         self.win = False
         self.pause_time = 0
         self.balls = []
+        self.ufo = UFO(65, 1, 8, 0)
+        self.bombs = []
+        self.ufo_bricks = []
+        self.ufo_count = 0
         self.paddle = Paddle(65, 29, 8, 0)
         self.bricks = []
         self.powerups = []
@@ -321,7 +321,16 @@ class Game:
                     Bullet(self.paddle.get_x()+self.paddle.xlength//2, self.paddle.get_y()))
 
     def move_all(self):
+
         self.paddle.last_shoot += 1
+        if self.level == 3:
+            self.ufo.last_shoot += 1
+            if self.ufo.last_shoot >= 3:
+                self.ufo.last_shoot = 0
+                self.bombs.append(Bomb(self.ufo.get_x(), self.ufo.get_y()+1))
+            for bomb in self.bombs:
+                if bomb.is_active():
+                    bomb.move()
         for bullet in self.bullets:
             if(bullet.is_active()):
                 for brick in self.bricks:
@@ -391,6 +400,24 @@ class Game:
             self.grab_ball = datetime.now()
 
     def collissions(self):
+        if self.level == 3:
+            for bomb in self.bombs:
+                if bomb.is_active() and bomb.did_collide(self.paddle):
+                    bomb.set_inactive()
+                    self.lives -= 1
+            for brick in self.bricks:
+                if brick.is_active() and not isinstance(brick, Unbreakable):
+                    break
+            else:
+                if self.ufo_count < 3 and self.ufo.health <= 4:
+                    self.ufo_count += 1
+                    brick_pos = [2, 10, 18, 26, 34, 42, 50, 58, 66,
+                                 74, 82,   90, 98, 106, 114, 122, 130, 138]
+
+                    for x in brick_pos:
+                        self.bricks.append(Brick(
+                            x, 2, np.random.choice([1, 2, 3, 4, 5])))
+
         for ball in self.balls:
             if ball.is_active() and ball.should_move():
 
@@ -398,6 +425,14 @@ class Game:
                 for p in points:
                     flag = False
                     flag = ball.move(p[0], p[1])
+                    if self.level == 3:
+                        a = self.ufo.did_collide(ball)
+                        if a != 0:
+                            ball.set_xv(ball.get_xv()+a)
+                            ball.set_yv(ball.get_yv()*-1)
+                            self.ufo.hit()
+                        if self. ufo.strength == 0:
+                            self.win = True
                     a = self.paddle.did_collide(ball)
                     if a != 0:
                         ball.set_xv(ball.get_xv()+a)
@@ -417,13 +452,15 @@ class Game:
                             if isinstance(brick, chain_brick):
                                 curr = brick.hit(self.bricks)
                                 if(curr == 0):
-                                    self.powerups.append(
-                                        Power_up(brick.get_x(), brick.get_y(), ball.get_xv(), ball.get_yv(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6])]))
+                                    if self.level != 3:
+                                        self.powerups.append(
+                                            Power_up(brick.get_x(), brick.get_y(), ball.get_xv(), ball.get_yv(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6])]))
                             else:
                                 curr = brick.hit()
                                 if(curr == 0):
-                                    self.powerups.append(
-                                        Power_up(brick.get_x(), brick.get_y(), ball.get_xv(), ball.get_yv(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6])]))
+                                    if self.level != 3:
+                                        self.powerups.append(
+                                            Power_up(brick.get_x(), brick.get_y(), ball.get_xv(), ball.get_yv(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6])]))
                             if not isinstance(brick, Unbreakable):
                                 self.score += 1
                     if(flag):
@@ -431,6 +468,10 @@ class Game:
 
     def update_screen(self):
         self.screen.add_to_game_screen(self.paddle)
+        if self.level == 3:
+            self.screen.add_to_game_screen(self.ufo)
+            for bomb in self.bombs:
+                self.screen.add_to_game_screen(bomb)
         for powerup in self.powerups:
             if(powerup.is_active()):
                 self.screen.add_to_game_screen(powerup)
@@ -511,8 +552,10 @@ class Game:
                 else:
 
                     if self.level == 3:
-                        self.win = True
-                        break
+                        if not self.win:
+                            continue
+                        else:
+                            break
                     self.level += 1
                     self.level_start = datetime.now()
                     self.small_reset()
