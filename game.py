@@ -6,6 +6,7 @@ from Game_Object import Game_object
 import numpy as np
 from unbreakable import Unbreakable
 from brick import Brick
+from rainbow_brick import rainbow_brick
 from paddle import Paddle
 from powerup import Power_up
 from config import TIME_PADDLE_POWER_UP, TIME_PASS_THROUGH, TIME_FAST_BALL, TIME_GRAB, LIVES, MOVE_BRICK
@@ -152,8 +153,13 @@ class Game:
                         if(p <= 1/4):
                             self.bricks.append(Unbreakable(x, y))
                         else:
-                            self.bricks.append(
-                                Brick(x, y, np.random.choice([1, 2, 3, 4, 5])))
+                            p = np.random.uniform(0, 1)
+                            if p <= 1/4:
+                                self.bricks.append(
+                                    rainbow_brick(x, y, np.random.choice([1, 2, 3, 4, 5])))
+                            else:
+                                self.bricks.append(
+                                    Brick(x, y, np.random.choice([1, 2, 3, 4, 5])))
 
         if self.level == 3:
             brick_pos = [2, 10, 18, 26, 34, 42, 50, 58, 66,
@@ -311,6 +317,9 @@ class Game:
         if self.get_change_in_secs(self.level_start) >= MOVE_BRICK:
             for brick in self.bricks:
                 self.over = brick.move()
+        for brick in self.bricks:
+            if isinstance(brick, rainbow_brick):
+                brick.change_strength()
 
     def execute_powerup(self, type):
         if np.array_equal(np.array([["P", "P"], ["P", "P"]]), type):
