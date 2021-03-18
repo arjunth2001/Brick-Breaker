@@ -42,7 +42,7 @@ class Game:
         np.array([["X", "X"], ["X", "X"]]),
         np.array([[">", ">"], [">", ">"]])]
     level = 1
-    skip_level = True
+    skip_level = False
     level_start = datetime.now()
     over = False
 
