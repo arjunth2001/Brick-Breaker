@@ -307,13 +307,16 @@ class Game:
     def move_all(self):
         for powerup in self.powerups:
             if(powerup.is_active()):
-                powerup.move()
-        for powerup in self.powerups:
-            if(powerup.is_active()):
-                col = powerup.did_collide(self.paddle)
-                if(col[0]):
-                    self.execute_powerup(col[1])
-                    powerup.set_inactive()
+                points = powerup.trajectory()
+                for p in points:
+                    flag = False
+                    flag = powerup.move(p[0], p[1])
+                    col = powerup.did_collide(self.paddle)
+                    if(col[0]):
+                        self.execute_powerup(col[1])
+                        powerup.set_inactive()
+                    if flag == True:
+                        break
         if self.get_change_in_secs(self.level_start) >= MOVE_BRICK:
             for brick in self.bricks:
                 self.over = brick.move()
@@ -379,12 +382,12 @@ class Game:
                                 curr = brick.hit(self.bricks)
                                 if(curr == 0):
                                     self.powerups.append(
-                                        Power_up(brick.get_x(), brick.get_y(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5])]))
+                                        Power_up(brick.get_x(), brick.get_y(), ball.get_xv(), ball.get_yv(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5])]))
                             else:
                                 curr = brick.hit()
                                 if(curr == 0):
                                     self.powerups.append(
-                                        Power_up(brick.get_x(), brick.get_y(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5])]))
+                                        Power_up(brick.get_x(), brick.get_y(), ball.get_xv(), ball.get_yv(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5])]))
                             if not isinstance(brick, Unbreakable):
                                 self.score += 1
                     if(flag):
