@@ -9,9 +9,10 @@ from brick import Brick
 from rainbow_brick import rainbow_brick
 from paddle import Paddle
 from powerup import Power_up
-from config import TIME_PADDLE_POWER_UP, TIME_PASS_THROUGH, TIME_FAST_BALL, TIME_GRAB, LIVES, MOVE_BRICK
+from config import TIME_PADDLE_POWER_UP, TIME_PASS_THROUGH, TIME_FAST_BALL, TIME_GRAB, LIVES, MOVE_BRICK, SHOOT_TIME
 from header import arjun, brickbreaker, presstoplay, gameover, on_continue, on_won
 from colorama import Fore, Back, Style
+from bullet import Bullet
 import os
 import time
 
@@ -41,7 +42,8 @@ class Game:
         np.array([["S", "S"], ["S", "S"]]),
         np.array([["G", "G"], ["G", "G"]]),
         np.array([["X", "X"], ["X", "X"]]),
-        np.array([[">", ">"], [">", ">"]])]
+        np.array([[">", ">"], [">", ">"]]),
+        np.array([["!", "!"], ["!", "!"]]), ]
     level = 1
     skip_level = False
     level_start = datetime.now()
@@ -56,6 +58,9 @@ class Game:
         if(self.paddle.get_powerup_time()):
             print_string += f" S left: %d" % (TIME_PADDLE_POWER_UP -
                                               self.get_change_in_secs(self.paddle.get_powerup_time()))
+        if(self.paddle.get_shoot_time()):
+            print_string += f" O left: %d" % (SHOOT_TIME -
+                                              self.get_change_in_secs(self.paddle.get_shoot_time()))
         if(self.fast_ball):
             print_string += f" F left: %d" % (TIME_FAST_BALL -
                                               self.get_change_in_secs(self.fast_ball))
@@ -63,7 +68,7 @@ class Game:
             print_string += f" G left: %d" % (TIME_GRAB -
                                               self.get_change_in_secs(self.grab_ball))
         print(print_string)
-        print('a- LEFT. d - right. r - release ball. PRESS p to pause. q to quit.')
+        print('a- LEFT. d - right. r - release ball. l - skip level. s - shoot bullet . PRESS p to pause. q to quit.')
 
     def get_change_in_secs(self, value):
         time_delta = datetime.now()-value
@@ -74,6 +79,9 @@ class Game:
         if(self.paddle.get_powerup_time()):
             if(self.get_change_in_secs(self.paddle.get_powerup_time()) > TIME_PADDLE_POWER_UP):
                 self.paddle.times_up()
+        if(self.paddle.get_shoot_time()):
+            if(self.get_change_in_secs(self.paddle.get_powerup_time()) > SHOOT_TIME):
+                self.paddle.times_up_shoot()
         if(self.pass_through):
             if(self.get_change_in_secs(self.pass_through) > TIME_PASS_THROUGH):
                 self.pass_through = 0
@@ -108,6 +116,7 @@ class Game:
         self.paddle = Paddle(65, 29, 8, 0)
         self.bricks = []
         self.powerups = []
+        self.bullets = []
         self.balls.append(Ball(69, 28, -1, -1))
         self.screen.reset_screen()
         self.update_screen()
@@ -254,6 +263,7 @@ class Game:
         self.balls = []
         self.paddle = Paddle(65, 29, 8, 0)
         self.powerups = []
+        self.bullets = []
         self.balls.append(Ball(69, 28, -1, -1))
         self.screen.reset_screen()
         self.update_screen()
@@ -274,6 +284,7 @@ class Game:
         self.paddle = Paddle(65, 29, 8, 0)
         self.bricks = []
         self.powerups = []
+        self.bullets = []
         self.balls.append(Ball(69, 28, -1, -1))
         self.screen = screen
         self.screen.print_game_screen()
@@ -303,8 +314,32 @@ class Game:
             quit()
         if(c == "l"):
             self.skip_level = True
+        if (c == "r"):
+            if(self.paddle.get_shoot_time() and self.paddle.last_shoot >= 4):
+                self.paddle.last_shoot = 0
+                self.bullets.append(
+                    Bullet(self.paddle.get_x()+self.paddle.xlength//2, self.paddle.get_y()))
 
     def move_all(self):
+        self.paddle.last_shoot += 1
+        for bullet in self.bullets:
+            if(bullet.is_active()):
+                for brick in self.bricks:
+                    if brick.is_active() and bullet.did_collide(brick):
+                        bullet.set_inactive()
+                        if isinstance(brick, chain_brick):
+                            curr = brick.hit(self.bricks)
+                            if(curr == 0):
+                                self.powerups.append(
+                                    Power_up(brick.get_x(), brick.get_y(), 0, 1, self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6])]))
+                        else:
+                            curr = brick.hit()
+                            if(curr == 0):
+                                self.powerups.append(
+                                    Power_up(brick.get_x(), brick.get_y(), 0, 1, self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6])]))
+                        if not isinstance(brick, Unbreakable):
+                            self.score += 1
+
         for powerup in self.powerups:
             if(powerup.is_active()):
                 powerup.set_yv(powerup.get_yv()+1)
@@ -383,12 +418,12 @@ class Game:
                                 curr = brick.hit(self.bricks)
                                 if(curr == 0):
                                     self.powerups.append(
-                                        Power_up(brick.get_x(), brick.get_y(), ball.get_xv(), ball.get_yv(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5])]))
+                                        Power_up(brick.get_x(), brick.get_y(), ball.get_xv(), ball.get_yv(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6])]))
                             else:
                                 curr = brick.hit()
                                 if(curr == 0):
                                     self.powerups.append(
-                                        Power_up(brick.get_x(), brick.get_y(), ball.get_xv(), ball.get_yv(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5])]))
+                                        Power_up(brick.get_x(), brick.get_y(), ball.get_xv(), ball.get_yv(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6])]))
                             if not isinstance(brick, Unbreakable):
                                 self.score += 1
                     if(flag):
@@ -399,6 +434,8 @@ class Game:
         for powerup in self.powerups:
             if(powerup.is_active()):
                 self.screen.add_to_game_screen(powerup)
+        for bullet in self.bullets:
+            self.screen.add_to_game_screen(bullet)
         for brick in self.bricks:
             if(brick.is_active()):
                 self.screen.add_to_game_screen(brick)

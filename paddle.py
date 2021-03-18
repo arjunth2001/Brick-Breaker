@@ -8,7 +8,10 @@ from datetime import datetime
 class Paddle (Game_object):
     def __init__(self, x, y, xv, yv):
         self.grab = False
+        self.shoot = False
         self.powerup_time = 0
+        self.last_shoot = 0
+        self.shoot_time = 0
         self.type = 1
         self.paddle = [
             np.array(
@@ -17,6 +20,14 @@ class Paddle (Game_object):
                 [["(", "X", "|", "X", "X", "|", "X", "X", "|", "X", "X", "|", "X", "X", "|",  "X", "X", "|", "X", "X", "|", "X", ")"]]),
             np.array(
                 [["(", "X", "|", "X", "|", "X", "|", "X", "|", "X", "|", "X", "|", "X", "|", "X", "|", "X", "|", "X", "|", "X", "|", "X", "|", "X", "|", "X", "|", "X", "|", "X", "|", "X", ")"]]),
+        ]
+        self.cpaddle = [
+            np.array(
+                [["O", "O", "|", "O", "|", "O", "|", "O", "|", "O", "|", "O", "O"]]),
+            np.array(
+                [["O", "O", "|", "O", "O", "|", "O", "O", "|", "O", "O", "|", "O", "O", "|",  "O", "O", "|", "O", "O", "|", "O", "O"]]),
+            np.array(
+                [["O", "O", "|", "O", "|", "O", "|", "O", "|", "O", "|", "O", "|", "O", "|", "O", "|", "O", "|", "O", "|", "O", "|", "O", "|", "O", "|", "O", "|", "O", "|", "O", "|", "O", "O"]]),
         ]
         self.color = [np.full((1, 13), (Fore.BLACK
                                         + Back.WHITE+Style.BRIGHT)), np.full((1, 23), (Fore.BLACK
@@ -41,7 +52,10 @@ class Paddle (Game_object):
 
     def get_array(self):
         '''Polymorphism: Overrides get_array of Game_object'''
-        return self.paddle[self.type]
+        if self.shoot_time == 0:
+            return self.paddle[self.type]
+        else:
+            return self.cpaddle[self.type]
 
     def get_color(self):
         '''Polymorphism: Overrides get_color of Game_object'''
@@ -70,8 +84,15 @@ class Paddle (Game_object):
         if self.x+self.xlength > SCREEN_WIDTH-1:
             self.x = SCREEN_WIDTH-2-self.xlength
 
+    def times_up_shoot(self):
+        self.last_shoot = 0
+        self.shoot_time = 0
+
     def get_powerup_time(self):
         return self.powerup_time
+
+    def get_shoot_time(self):
+        return self.shoot_time
 
     def did_collide(self, obj):
         '''Polymorphism over game_object did_collide. Calculates Positions'''
