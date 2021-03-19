@@ -13,8 +13,8 @@ class UFO (Game_object):
             np.array(
                 [["<", "U", "W", "U", "|", "U", "W", "U", "|", "U", "W", "U", ">"]]),
         ]
-        color = [np.full((1, 13), (Fore.BLACK
-                                   + Back.GREEN + Style.BRIGHT))]
+        self.color = [np.full((1, 13), (Fore.BLACK
+                                        + Back.GREEN + Style.BRIGHT))]
         super().__init__(x, y, 13, 1, xv, yv, self.paddle[0], self.color[0])
 
     def move(self, x=-0.5, y=-0.5):
@@ -25,7 +25,7 @@ class UFO (Game_object):
             self.x = SCREEN_WIDTH-2-self.xlength
 
     def hit(self):
-        health -= 1
+        self.health -= 1
 
     def did_collide(self, obj):
         '''Polymorphism over game_object did_collide. Calculates Positions'''
@@ -38,3 +38,4 @@ class UFO (Game_object):
             if(obj.x < self.x+9):
                 return 2
             return 3
+        return 0

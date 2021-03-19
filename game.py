@@ -48,6 +48,7 @@ class Game:
         np.array([["!", "!"], ["!", "!"]]),
         np.array([["F", "F"], ["F", "F"]]), ]
     level = 1
+    last_move = 0
     skip_level = False
     level_start = datetime.now()
     over = False
@@ -128,6 +129,7 @@ class Game:
         self.bullets = []
         self.ufo = UFO(65, 1, 8, 0)
         self.bombs = []
+        self.level = 1
         self.ufo_count = 0
         self.balls.append(Ball(69, 28, -1, -1))
         self.screen.reset_screen()
@@ -137,6 +139,7 @@ class Game:
         self.print_meta()
 
     def put_bricks(self):
+        self.last_move = 0
 
         if self.level == 1:
             brick_pos = [26, 34, 42, 50, 58, 66,
@@ -188,6 +191,7 @@ class Game:
             self.bricks.clear()
             for y in range(4, 10, 2):
                 for x in brick_pos:
+                    p = np.random.uniform()
                     if(p <= 1/10):
                         self.bricks.append(Unbreakable(x, y))
 
@@ -302,11 +306,15 @@ class Game:
         c = input_to(self.getch, 0.1)
         if(c == "a"):
             self.paddle.move(self.paddle.get_x()-self.paddle.get_xv())
+            if self.level == 3:
+                self.ufo.move(self.paddle.get_x()-self.paddle.get_xv())
             for ball in self.balls:
                 if not ball.should_move():
                     ball.move(ball.get_x()-self.paddle.get_xv(), ball.get_y())
         if(c == "d"):
             self.paddle.move(self.paddle.get_x()+self.paddle.get_xv())
+            if self.level == 3:
+                self.ufo.move(self.paddle.get_x()+self.paddle.get_xv())
             for ball in self.balls:
                 if not ball.should_move():
                     ball.move(ball.get_x()+self.paddle.get_xv(), ball.get_y())
@@ -330,9 +338,10 @@ class Game:
     def move_all(self):
 
         self.paddle.last_shoot += 1
+        self.last_move += 1
         if self.level == 3:
             self.ufo.last_shoot += 1
-            if self.ufo.last_shoot >= 3:
+            if self.ufo.last_shoot >= 30:
                 self.ufo.last_shoot = 0
                 self.bombs.append(Bomb(self.ufo.get_x(), self.ufo.get_y()+1))
             for bomb in self.bombs:
@@ -369,7 +378,8 @@ class Game:
                         powerup.set_inactive()
                     if flag == True:
                         break
-        if self.get_change_in_secs(self.level_start) >= MOVE_BRICK:
+        if self.get_change_in_secs(self.level_start) >= MOVE_BRICK and self.last_move >= 30:
+            self.last_move = 0
             for brick in self.bricks:
                 self.over = brick.move()
         for brick in self.bricks:
@@ -442,7 +452,7 @@ class Game:
                             ball.set_xv(ball.get_xv()+a)
                             ball.set_yv(ball.get_yv()*-1)
                             self.ufo.hit()
-                        if self. ufo.strength == 0:
+                        if self.ufo.health == 0:
                             self.win = True
                     a = self.paddle.did_collide(ball)
                     if a != 0:
@@ -488,7 +498,8 @@ class Game:
         if self.level == 3:
             self.screen.add_to_game_screen(self.ufo)
             for bomb in self.bombs:
-                self.screen.add_to_game_screen(bomb)
+                if bomb.is_active():
+                    self.screen.add_to_game_screen(bomb)
         for powerup in self.powerups:
             if(powerup.is_active()):
                 self.screen.add_to_game_screen(powerup)
