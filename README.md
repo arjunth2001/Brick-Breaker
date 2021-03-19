@@ -2,7 +2,7 @@
 
 Submitted by T.H.Arjun, CSD, 2019111012
 
-### DASS Assignment 2
+### DASS Assignment 2 and 3
 
 Brick Breaker Terminal Game in Python
 
@@ -10,6 +10,7 @@ Brick Breaker Terminal Game in Python
 
 - colorama
 - numpy
+- linux to run aplay for sound effects
 
 ### Instructions to Run
 
@@ -18,6 +19,167 @@ Brick Breaker Terminal Game in Python
 - Run `python3 main.py`
 
 **All Assignment requirements have been implemented**
+
+## Assignment 3 Edits:
+
+- ### Levels
+  - Levels have been implemented easily because of modularity in `game.py` by adding an extra loop and some if statements.
+  - `l` is the key assigned to skip levels
+- ### Falling Bricks
+
+  - The time for falling bricks can be edited in `config.py` by editing value of `MOVE_BRICK`.
+  - The `move()` function was added to `Brick` class which is an overriding over `Game_Object move()`
+
+  ```Python
+  def move(self):
+        self.y += 1
+        if self.y+1 == 29:
+            return True
+        else:
+            return False
+
+  ```
+
+  - The following changes were made to `game.py` to move the brick on time limit.
+
+  ```Python
+  if self.get_change_in_secs(self.level_start) >= MOVE_BRICK and self.last_move >= 30:
+            self.last_move = 0
+            for brick in self.bricks:
+                if not self.over:
+                    self.over = brick.move()
+                else:
+                    brick.move()
+  ```
+
+- ### Rainbow Bricks
+
+  - For adding Rainbow Bricks a new `rainbow_brick` class was added in `rainbow_brick.py`
+  - It inherits from `Brick` class
+  - Changes were made in `game.py` to change the strength each frame.
+  - Following methods were overridden or defined:
+
+  ```Python
+  def get_array(self):
+        '''get's body of rainbow_brick
+        Polymorphism: Overrides Game_Object get_array'''
+        return self.array
+
+    def did_collide(self, obj):
+        collided = super().did_collide(obj)
+        if collided == True:
+            self.change = False
+        return collided
+
+    def change_strength(self):
+        if self.change == True:
+            self.strength = np.random.choice([1, 2, 3, 4, 5])
+
+    def get_color(self):
+        return self.strength_color[self.strength]
+  ```
+
+- ### Power-Up 2.0
+
+  - Implementing this feature was fairly easy considering the modularify of the code.
+  - The following code was added in `powerup.py` to implement this.
+
+  ```Python
+  def did_collide(self, obj):
+        collide = super().did_collide(obj)
+        if(collide):
+            return (True, self.get_array())
+        else:
+            return(False, None)
+
+    def trajectory(self):
+        '''Returns the points on the trajectory of the next move'''
+        x1 = self.x
+        x2 = self.x+self.xv
+        y1 = self.y
+        y2 = self.y + self.yv
+        trajectory_return = []
+        if x2 == x1:
+            step = 0
+            if y2 > y1:
+                step = 1
+            else:
+                step = -1
+            for y in range(y1+step, y2+step, step):
+                trajectory_return.append((x1, y))
+            return trajectory_return
+        if y2 == y1:
+            step = 0
+            if x2 > x1:
+                step = 1
+            else:
+                step = -1
+            for x in range(x1+step, x2+step, step):
+                trajectory_return.append((x, y1))
+            return trajectory_return
+        step = 0
+        if x2 > x1:
+            step = 1
+        else:
+            step = -1
+        for x in range(x1+step, x2+step, step):
+
+            y_ = ((y2-y1)*(x-x1))/(x2-x1)+y1
+            y = int(round(y_))
+            if y == y_:
+                trajectory_return.append((x, y))
+        return trajectory_return
+
+    def move(self, x=-0.5, y=-0.5):
+        '''moves the ball around to x,y. If no x,y directly moves. This is overriding the basic move with extra functionality
+                                   (example of polymorphism)'''
+        super().move(x, y)
+        flag = False
+        if(self.x <= 1 or self.x > SCREEN_WIDTH-2):
+            self.x = 1 if self.x <= 1 else SCREEN_WIDTH-2
+            self.xv *= -1
+            flag = True
+        if(self.y <= 1):
+            self.y = 1
+            self.yv *= -1
+            flag = True
+        if(self.y > SCREEN_HEIGHT-3):
+            self.set_inactive()
+            flag = True
+        return flag
+  ```
+
+- ### Shooting Paddle
+
+  - Changes were made to `game.py` and `paddle.py`
+  - Press `s` to shoot.. There is a delay between each shoot
+  - The power up is represented by `!`
+  - new class of `bullet` was made in `bullet.py`
+  - It inherits `Game_Object`
+  - All necessary criteria are met
+  - Changes to `paddle.py`
+
+  ```Python
+  def get_shoot_time(self):
+        return self.shoot_time
+  ```
+
+  - Changes to `game.py` including bullets array and moving them around
+
+- ### BOSS Enemy
+  - The boss enemy is implemented as mentioned in the assignment PDF
+  - `ufo.py` has the new class `UFO` created for the boss
+  - `bomb.py` has the new `Bomb` class created for the bomb.
+  - Both of these inherit from `Game_object`
+- ## Bonus Assignment 3
+  - ### Fireball Power Up
+    - Represented by `F`
+    - Changes made in `game.py`
+  - ### Sounds
+    - Sound effect were added by running `aplay` command in background in terminal using `os.system()`
+    - Sound effect files are in `sounds` folder
+
+### All OOP Concepts were followed for Assignment 3 as well
 
 Below given is OOP Concepts and Game Rules
 
