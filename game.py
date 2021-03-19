@@ -61,7 +61,7 @@ class Game:
             add_me = " "
             for i in range(0, self.ufo.health):
                 add_me += "|| "
-            print_string += "UFO health:  " + add_me
+            print_string += "  UFO health:  " + add_me
         if(self.pass_through):
             print_string += f" P left: %d" % (TIME_PASS_THROUGH -
                                               self.get_change_in_secs(self.pass_through))
@@ -336,6 +336,9 @@ class Game:
                     Bullet(self.paddle.get_x()+self.paddle.xlength//2, self.paddle.get_y()))
 
     def move_all(self):
+        for brick in self.bricks:
+            if isinstance(brick, rainbow_brick) and brick.is_active():
+                brick.change_strength()
 
         self.paddle.last_shoot += 1
         self.last_move += 1
@@ -367,7 +370,10 @@ class Game:
 
         for powerup in self.powerups:
             if(powerup.is_active()):
-                powerup.set_yv(powerup.get_yv()+1)
+                powerup.incr += 1
+                if powerup.incr >= 5:
+                    powerup.incr = 0
+                    powerup.set_yv(powerup.get_yv()+1)
                 points = powerup.trajectory()
                 for p in points:
                     flag = False
@@ -381,7 +387,10 @@ class Game:
         if self.get_change_in_secs(self.level_start) >= MOVE_BRICK and self.last_move >= 30:
             self.last_move = 0
             for brick in self.bricks:
-                self.over = brick.move()
+                if not self.over:
+                    self.over = brick.move()
+                else:
+                    brick.move()
         for brick in self.bricks:
             if isinstance(brick, rainbow_brick):
                 brick.change_strength()
@@ -430,7 +439,7 @@ class Game:
                 if brick.is_active() and not isinstance(brick, Unbreakable):
                     break
             else:
-                if self.ufo_count < 3 and self.ufo.health <= 4:
+                if self.ufo_count < 3 and self.ufo.health <= 8:
                     self.ufo_count += 1
                     brick_pos = [2, 10, 18, 26, 34, 42, 50, 58, 66,
                                  74, 82,   90, 98, 106, 114, 122, 130, 138]
@@ -557,6 +566,11 @@ class Game:
             self.put_bricks()
             while self.level <= 3 and self.lives > 0:
                 self.user_input()
+                if self.skip_level == True and self.level == 3:
+                    self.level = 1
+                    self.skip_level = False
+                    self.over = True
+                    break
                 self.move_all()
                 if self.over == True:
                     break
@@ -573,6 +587,8 @@ class Game:
                 else:
                     self.lives -= 1
                     self.small_reset()
+                if self.level == 3 and self.win:
+                    break
                 for brick in self.bricks:
                     if not isinstance(brick, Unbreakable):
                         if brick.is_active():
@@ -595,6 +611,9 @@ class Game:
                     self.level_start = datetime.now()
                     self.small_reset()
                     self.put_bricks()
+                    if self.level == 4:
+                        self.level = 1
+                        break
             if self.win:
                 self.winpage()
             elif self.lives == 0 or self.over:

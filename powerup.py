@@ -6,6 +6,7 @@ from config import SCREEN_HEIGHT, SCREEN_WIDTH
 
 class Power_up(Game_object):
     def __init__(self, x, y, xv, yv, body):
+        self.incr = 0
         color = np.full((2, 2), Back.RED+Fore.GREEN+Style.BRIGHT)
         super().__init__(x, y, 2, 2, xv, yv, body, color)
 
