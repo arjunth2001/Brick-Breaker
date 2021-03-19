@@ -125,7 +125,8 @@ class Game:
         self.balls = []
         self.paddle = Paddle(65, 29, 8, 0)
         self.bricks = []
-        self.powerups = []
+        self.powerups = [
+            Power_up(66, 23, 0, 1, self.power_up_type[np.random.choice([7])])]
         self.bullets = []
         self.ufo = UFO(65, 1, 8, 0)
         self.bombs = []
@@ -485,6 +486,12 @@ class Game:
                             flag = True
                         elif brick.is_active() and brick.did_collide(ball):
                             flag = True
+                            if self.fireball == True:
+                                for other_brick in self.bricks:
+                                    if (other_brick.x == brick.x or other_brick.x == brick.x-brick.xlength or other_brick.x == brick.x+brick.xlength) and (other_brick.y == brick.y or other_brick.y == brick.y-1 or other_brick.y == brick.y+1):
+                                        other_brick.set_inactive()
+                                        self.score += 5
+                                self.fireball = False
                             if isinstance(brick, chain_brick):
                                 curr = brick.hit(self.bricks)
                                 if(curr == 0):
