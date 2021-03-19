@@ -10,7 +10,7 @@ class Bullet (Game_object):
 
     def __init__(self, x, y):
         bullet = np.array([["@"]])
-        color = np.array([[Fore.RED+Back.BLACK+Style.BRIGHT]])
+        color = np.array([[Fore.RED+Back.WHITE+Style.BRIGHT]])
         super().__init__(x, y, 1, 1, 0, -1, bullet, color)
 
     def move(self, x=-0.5, y=-0.5):

@@ -90,7 +90,7 @@ class Game:
             if(self.get_change_in_secs(self.paddle.get_powerup_time()) > TIME_PADDLE_POWER_UP):
                 self.paddle.times_up()
         if(self.paddle.get_shoot_time()):
-            if(self.get_change_in_secs(self.paddle.get_powerup_time()) > SHOOT_TIME):
+            if(self.get_change_in_secs(self.paddle.get_shoot_time()) > SHOOT_TIME):
                 self.paddle.times_up_shoot()
         if(self.pass_through):
             if(self.get_change_in_secs(self.pass_through) > TIME_PASS_THROUGH):
@@ -125,8 +125,7 @@ class Game:
         self.balls = []
         self.paddle = Paddle(65, 29, 8, 0)
         self.bricks = []
-        self.powerups = [
-            Power_up(66, 23, 0, 1, self.power_up_type[np.random.choice([7])])]
+        self.powerups = []
         self.bullets = []
         self.ufo = UFO(65, 1, 8, 0)
         self.bombs = []
@@ -330,11 +329,11 @@ class Game:
             quit()
         if(c == "l"):
             self.skip_level = True
-        if (c == "r"):
-            if(self.paddle.get_shoot_time() and self.paddle.last_shoot >= 4):
+        if (c == "s"):
+            if(self.paddle.get_shoot_time() and self.paddle.last_shoot >= 8):
                 self.paddle.last_shoot = 0
                 self.bullets.append(
-                    Bullet(self.paddle.get_x()+self.paddle.xlength//2, self.paddle.get_y()))
+                    Bullet(self.paddle.get_x(), self.paddle.get_y()-1))
 
     def move_all(self):
         for brick in self.bricks:
@@ -352,6 +351,7 @@ class Game:
                 if bomb.is_active():
                     bomb.move()
         for bullet in self.bullets:
+            bullet.move()
             if(bullet.is_active()):
                 for brick in self.bricks:
                     if brick.is_active() and bullet.did_collide(brick):
@@ -520,7 +520,8 @@ class Game:
             if(powerup.is_active()):
                 self.screen.add_to_game_screen(powerup)
         for bullet in self.bullets:
-            self.screen.add_to_game_screen(bullet)
+            if bullet.is_active():
+                self.screen.add_to_game_screen(bullet)
         for brick in self.bricks:
             if(brick.is_active()):
                 self.screen.add_to_game_screen(brick)
