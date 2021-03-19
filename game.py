@@ -45,15 +45,22 @@ class Game:
         np.array([["G", "G"], ["G", "G"]]),
         np.array([["X", "X"], ["X", "X"]]),
         np.array([[">", ">"], [">", ">"]]),
-        np.array([["!", "!"], ["!", "!"]]), ]
+        np.array([["!", "!"], ["!", "!"]]),
+        np.array([["F", "F"], ["F", "F"]]), ]
     level = 1
     skip_level = False
     level_start = datetime.now()
     over = False
+    fireball = False
 
     def print_meta(self):
         print_string = f"\33[2K Level:%d Lives Left:%d  Score:%d  Time Spend:%d" % (
             self.level, self.lives, self.score, self.time_elapsed())
+        if self.level == 3:
+            add_me = " "
+            for i in range(0, self.ufo.health):
+                add_me += "|| "
+            print_string += "UFO health:  " + add_me
         if(self.pass_through):
             print_string += f" P left: %d" % (TIME_PASS_THROUGH -
                                               self.get_change_in_secs(self.pass_through))
@@ -340,12 +347,12 @@ class Game:
                             curr = brick.hit(self.bricks)
                             if(curr == 0):
                                 self.powerups.append(
-                                    Power_up(brick.get_x(), brick.get_y(), 0, 1, self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6])]))
+                                    Power_up(brick.get_x(), brick.get_y(), 0, 1, self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6, 7])]))
                         else:
                             curr = brick.hit()
                             if(curr == 0):
                                 self.powerups.append(
-                                    Power_up(brick.get_x(), brick.get_y(), 0, 1, self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6])]))
+                                    Power_up(brick.get_x(), brick.get_y(), 0, 1, self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6, 7])]))
                         if not isinstance(brick, Unbreakable):
                             self.score += 1
 
@@ -398,6 +405,10 @@ class Game:
         if np.array_equal(np.array([["G", "G"], ["G", "G"]]), type):
             self.paddle.set_grab()
             self.grab_ball = datetime.now()
+        if np.array_equal(np.array([["!", "!"], ["!", "!"]]), type):
+            self.paddle.shoot_time = datetime.now()
+        if np.array_equal(np.array([["F", "F"], ["F", "F"]]), type):
+            self.fireball = True
 
     def collissions(self):
         if self.level == 3:
@@ -445,6 +456,12 @@ class Game:
                     for brick in self.bricks:
                         if self.pass_through and brick.is_active() and brick.pass_through_collide(ball):
                             brick.set_inactive()
+                            if self.fireball == True:
+                                for other_brick in self.bricks:
+                                    if (other_brick.x == brick.x or other_brick.x == brick.x-brick.xlength or other_brick.x == brick.x+brick.xlength) and (other_brick.y == brick.y or other_brick.y == brick.y-1 or other_brick.y == brick.y+1):
+                                        other_brick.set_inactive()
+                                        self.score += 5
+                                self.fireball = False
                             self.score += 5
                             flag = True
                         elif brick.is_active() and brick.did_collide(ball):
