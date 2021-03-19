@@ -197,6 +197,8 @@ class Game:
 
     def main_screen(self):
         os.system("clear")
+        os.system(
+            'aplay -q ./sounds/main.wav&')
         self.screen.reset_screen()
         self.screen.add_to_game_screen(self.my_arjun)
         self.screen.add_to_game_screen(self.my_brickbreaker)
@@ -357,11 +359,15 @@ class Game:
                     if brick.is_active() and bullet.did_collide(brick):
                         bullet.set_inactive()
                         if isinstance(brick, chain_brick):
+                            os.system(
+                                'aplay -q ./sounds/break.wav&')
                             curr = brick.hit(self.bricks)
                             if(curr == 0):
                                 self.powerups.append(
                                     Power_up(brick.get_x(), brick.get_y(), 0, 1, self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6, 7])]))
                         else:
+                            os.system(
+                                'aplay -q ./sounds/break.wav&')
                             curr = brick.hit()
                             if(curr == 0):
                                 self.powerups.append(
@@ -436,6 +442,8 @@ class Game:
                 if bomb.is_active() and bomb.did_collide(self.paddle):
                     bomb.set_inactive()
                     self.lives -= 1
+                    os.system(
+                        'aplay -q ./sounds/lost.wav&')
             for brick in self.bricks:
                 if brick.is_active() and not isinstance(brick, Unbreakable):
                     break
@@ -462,6 +470,8 @@ class Game:
                             ball.set_xv(ball.get_xv()+a)
                             ball.set_yv(ball.get_yv()*-1)
                             self.ufo.hit()
+                            os.system(
+                                'aplay -q ./sounds/ufo.wav&')
                         if self.ufo.health == 0:
                             self.win = True
                     a = self.paddle.did_collide(ball)
@@ -494,12 +504,16 @@ class Game:
                                 self.fireball = False
                             if isinstance(brick, chain_brick):
                                 curr = brick.hit(self.bricks)
+                                os.system(
+                                    'aplay -q ./sounds/break.wav&')
                                 if(curr == 0):
                                     if self.level != 3:
                                         self.powerups.append(
                                             Power_up(brick.get_x(), brick.get_y(), ball.get_xv(), ball.get_yv(), self.power_up_type[np.random.choice([0, 1, 2, 3, 4, 5, 6])]))
                             else:
                                 curr = brick.hit()
+                                os.system(
+                                    'aplay -q ./sounds/break.wav&')
                                 if(curr == 0):
                                     if self.level != 3:
                                         self.powerups.append(
@@ -549,6 +563,8 @@ class Game:
 
     def winpage(self):
         os.system("clear")
+        os.system(
+            'aplay -q ./sounds/win.wav&')
         self.win = False
         score_string = f"SCORE: %d" % (self.score)
         body = np.array([list(score_string)])
@@ -594,6 +610,8 @@ class Game:
                         break
                 else:
                     self.lives -= 1
+                    os.system(
+                        'aplay -q ./sounds/lost.wav&')
                     self.small_reset()
                 if self.level == 3 and self.win:
                     break
@@ -626,4 +644,6 @@ class Game:
                 self.winpage()
             elif self.lives == 0 or self.over:
                 self.over = False
+                os.system(
+                    'aplay -q ./sounds/lost.wav&')
                 self.lost()
